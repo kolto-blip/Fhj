@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Иррационал сандар</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;1,500;1,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: graph-paper page, one reading column; interactive panels sit on raised "worksheet" surfaces */
+:root{
+  --paper:#EDF0F3; --surface:#F9FAFB; --ink:#1A2340; --muted:#596277; --line:#C8CFD9;
+  --gold:#A86E06; --gold-soft:rgba(168,110,6,.11); --rat:#2D6789; --rat-soft:rgba(45,103,137,.10);
+  --ok:#2C7A4C; --bad:#B03838;
+  --f-display:"Alegreya", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#10141C; --surface:#171D28; --ink:#E3E7EE; --muted:#9AA3B5; --line:#2B3343;
+  --gold:#E3AF4E; --gold-soft:rgba(227,175,78,.13); --rat:#7FB7D8; --rat-soft:rgba(127,183,216,.12);
+  --ok:#6CC28F; --bad:#E57D7D; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#10141C; --surface:#171D28; --ink:#E3E7EE; --muted:#9AA3B5; --line:#2B3343;
+  --gold:#E3AF4E; --gold-soft:rgba(227,175,78,.13); --rat:#7FB7D8; --rat-soft:rgba(127,183,216,.12);
+  --ok:#6CC28F; --bad:#E57D7D; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--f-body); font-size:1.02rem; line-height:1.6;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 45%, transparent) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.wrap{max-width:900px; margin:0 auto; padding-inline:clamp(16px,4vw,32px); padding-block:28px 72px; display:flex; flex-direction:column; gap:72px}
+h1,h2,h3{font-family:var(--f-display); font-weight:700; line-height:1.15; text-wrap:balance; margin:0}
+h2{font-size:clamp(1.7rem,4vw,2.3rem)}
+h3{font-size:1.3rem}
+p{margin:0; max-width:65ch}
+.eyebrow{font-family:var(--f-mono); font-size:.76rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.sec{display:flex; flex-direction:column; gap:20px}
+.sec-head{display:flex; flex-direction:column; gap:8px}
+.sym{font-family:var(--f-display); font-style:italic; color:var(--gold)}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:clamp(16px,3vw,26px); display:flex; flex-direction:column; gap:16px; min-width:0}
+.mono{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.gold{color:var(--gold)}
+.rat{color:var(--rat)}
+
+/* hero */
+.hero{display:flex; flex-direction:column; gap:18px; padding-top:24px}
+.hero h1{font-size:clamp(2.6rem,8vw,4.6rem); letter-spacing:-.01em}
+.hero .lead{font-size:1.15rem; color:var(--muted)}
+.digits{font-family:var(--f-display); font-style:italic; font-size:clamp(1.6rem,4.6vw,2.5rem); line-height:1.25; word-break:break-all; color:var(--ink)}
+.digits .root{color:var(--gold); font-style:normal; font-weight:700}
+.digits .tail{color:var(--muted)}
+.caret{display:inline-block; width:.08em; height:.9em; background:var(--gold); vertical-align:-.08em; margin-left:2px; animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block; width:100%; height:auto; min-width:0}
+svg text{font-family:var(--f-mono); fill:var(--muted)}
+svg .lbl-i{fill:var(--gold); font-family:var(--f-display); font-style:italic; font-size:19px}
+
+/* definition */
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px}
+.def{border-top:3px solid var(--rat)}
+.def.irr{border-top-color:var(--gold)}
+.def .tag{font-family:var(--f-display); font-size:2rem; font-style:italic}
+.ex{font-family:var(--f-mono); font-size:.92rem; display:flex; flex-direction:column; gap:4px}
+.sets{display:flex; flex-direction:column; gap:10px}
+.nest{border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px}
+.nest .nm{font-family:var(--f-mono); font-size:.85rem; color:var(--muted)}
+.nest .nm b{font-family:var(--f-display); font-size:1.25rem; color:var(--ink); margin-right:6px}
+.nest.q{background:var(--rat-soft); border-color:color-mix(in srgb,var(--rat) 45%,transparent)}
+.r-row{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:10px}
+.nest.i{background:var(--gold-soft); border-color:color-mix(in srgb,var(--gold) 45%,transparent); justify-content:center}
+@media (max-width:540px){.r-row{grid-template-columns:1fr}}
+table{border-collapse:collapse; width:100%; font-size:.93rem}
+.tbl{overflow-x:auto}
+th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap}
+th{font-weight:600; font-size:.8rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+td.num{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+
+/* controls */
+.controls{display:flex; flex-wrap:wrap; gap:14px 24px; align-items:center}
+.ctl{display:flex; align-items:center; gap:10px; font-family:var(--f-mono); font-size:.92rem}
+input[type=range]{accent-color:var(--gold); width:150px}
+input[type=number]{font-family:var(--f-mono); font-size:1rem; width:110px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--paper); color:var(--ink)}
+.result{font-family:var(--f-display); font-size:1.5rem}
+.verdict{display:inline-block; font-family:var(--f-body); font-size:.8rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:3px 10px; border-radius:999px; vertical-align:middle; margin-left:8px}
+.verdict.r{background:var(--rat-soft); color:var(--rat)}
+.verdict.i{background:var(--gold-soft); color:var(--gold)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{font-family:var(--f-display); font-size:1.1rem; padding:4px 14px; border-radius:999px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--gold); color:var(--surface); border-color:var(--gold)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+
+/* proof */
+.proof{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; counter-reset:st}
+.proof li{counter-increment:st; display:grid; grid-template-columns:2.4rem minmax(0,1fr); gap:12px; padding:14px 0; border-bottom:1px dashed var(--line)}
+.proof li::before{content:counter(st); font-family:var(--f-display); font-size:1.5rem; color:var(--gold); line-height:1.1}
+.proof .m{font-family:var(--f-display); font-style:italic; font-size:1.15rem}
+.qed{font-family:var(--f-display); font-size:1.15rem}
+
+/* constants */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.card .big{font-family:var(--f-display); font-style:italic; font-size:2.4rem; color:var(--gold); line-height:1}
+.card .name{font-weight:600}
+.card .dg{font-family:var(--f-mono); font-size:.8rem; color:var(--muted); word-break:break-all}
+.card p{font-size:.93rem}
+
+/* rules */
+.rules{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface)}
+.rule{padding:16px 18px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); display:flex; flex-direction:column; gap:6px}
+.rule .f{font-family:var(--f-display); font-size:1.15rem}
+.rule .e{font-family:var(--f-mono); font-size:.88rem; color:var(--muted)}
+
+/* quiz */
+.quiz{display:flex; flex-direction:column; gap:0}
+.qi{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 14px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line)}
+.qi .x{font-family:var(--f-display); font-size:1.35rem}
+.qi .btns{display:flex; gap:6px}
+.qi button{font-family:var(--f-body); font-size:.85rem; padding:6px 12px; border-radius:6px; border:1px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer}
+.qi button:disabled{cursor:default; opacity:.55}
+.qi button.picked-ok{background:var(--ok); border-color:var(--ok); color:var(--surface); opacity:1}
+.qi button.picked-bad{background:var(--bad); border-color:var(--bad); color:var(--surface); opacity:1}
+.qi .why{grid-column:1/-1; font-size:.9rem; color:var(--muted)}
+.score{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.score .s{font-family:var(--f-display); font-size:1.4rem}
+.btn{font-family:var(--f-body); font-weight:500; padding:8px 16px; border-radius:6px; border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer}
+@media (max-width:480px){.qi{grid-template-columns:1fr}}
+
+footer{border-top:1px solid var(--line); padding-top:20px; color:var(--muted); font-size:.9rem}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Алгебра · 8-сынып · нақты сандар</span>
+  <h1>Иррационал сандар</h1>
+  <p class="lead">Екі бүтін санның қатынасы түрінде ешқашан жазылмайтын сандар. Олардың ондық жазуы шексіз, әрі ешбір период қайталанбайды.</p>
+  <div class="digits" aria-label="Екінің түбірі шамамен 1,41421356"><span class="root">√2 = </span><span id="hero-digits">1,41421356237</span><span class="caret" aria-hidden="true"></span></div>
+  <div class="svgbox">
+    <svg viewBox="0 0 680 112" role="img" aria-label="Сан түзуінде √2, φ, √3, e, π нүктелері">
+      <line x1="20" y1="60" x2="660" y2="60" stroke="var(--ink)" stroke-width="1.5"/>
+      <g id="ticks"></g>
+      <g id="irr-marks"></g>
+    </svg>
+  </div>
+</header>
+
+<section class="sec" id="def">
+  <div class="sec-head">
+    <span class="eyebrow">Анықтама</span>
+    <h2>Рационал мен иррационалдың айырмасы</h2>
+  </div>
+  <div class="two">
+    <div class="panel def">
+      <span class="tag rat">ℚ</span>
+      <h3>Рационал сан</h3>
+      <p><span class="mono">m/n</span> түрінде жазылатын сан, мұндағы m ∈ ℤ, n ∈ ℕ. Ондық жазуы не <b>ақырлы</b>, не <b>шексіз периодты</b>.</p>
+      <div class="ex muted"><span>3/4 = 0,75</span><span>1/3 = 0,333… = 0,(3)</span><span>−5 = −5/1</span></div>
+    </div>
+    <div class="panel def irr">
+      <span class="tag gold">𝕀</span>
+      <h3>Иррационал сан</h3>
+      <p>Шексіз <b>периодсыз</b> ондық бөлшек. Оны екі бүтін санның қатынасы ретінде жазу мүмкін емес.</p>
+      <div class="ex muted"><span>√2 = 1,41421356…</span><span>π = 3,14159265…</span><span>0,1010010001…</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Сан жиындары</h3>
+    <div class="sets" aria-label="Сан жиындарының бір-біріне енуі">
+      <div class="nest"><span class="nm"><b>ℝ</b>нақты сандар = ℚ ∪ 𝕀</span>
+        <div class="r-row">
+          <div class="nest q"><span class="nm"><b>ℚ</b>рационал сандар: 2/7, −0,5, 0,(3)</span>
+            <div class="nest"><span class="nm"><b>ℤ</b>бүтін сандар: …, −2, −1, 0</span>
+              <div class="nest"><span class="nm"><b>ℕ</b>натурал сандар: 1, 2, 3, …</span></div>
+            </div>
+          </div>
+          <div class="nest i"><span class="nm"><b>𝕀</b>иррационал: √2, π, e, φ</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Ондық жазу</th><th>Мысал</th><th>Жиын</th></tr></thead>
+        <tbody>
+          <tr><td>Ақырлы</td><td class="num">0,125 = 1/8</td><td class="rat">рационал</td></tr>
+          <tr><td>Шексіз периодты</td><td class="num">0,(45) = 5/11</td><td class="rat">рационал</td></tr>
+          <tr><td>Шексіз периодсыз</td><td class="num">√5 = 2,2360679…</td><td class="gold">иррационал</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="geo">
+  <div class="sec-head">
+    <span class="eyebrow">Геометрия</span>
+    <h2>Түбірді сан түзуіне салу</h2>
+    <p class="muted">Катеттері a және b болатын тікбұрышты үшбұрыштың гипотенузасы √(a² + b²). Циркульмен гипотенузаны сан түзуіне көшірсек, нақты нүкте шығады. a = b = 1 болғанда ол √2 нүктесі.</p>
+  </div>
+  <div class="panel">
+    <div class="controls">
+      <label class="ctl" for="leg-a">a = <span id="va">1</span><input id="leg-a" type="range" min="1" max="4" step="1" value="1"></label>
+      <label class="ctl" for="leg-b">b = <span id="vb">1</span><input id="leg-b" type="range" min="1" max="4" step="1" value="1"></label>
+    </div>
+    <div class="result" id="geo-out" aria-live="polite"></div>
+    <div class="svgbox">
+      <svg id="geo" viewBox="0 0 540 390" role="img" aria-label="Пифагор теоремасы арқылы түбірді салу"></svg>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="proof">
+  <div class="sec-head">
+    <span class="eyebrow">Дәлелдеу</span>
+    <h2>Неге √2 бөлшек бола алмайды?</h2>
+    <p class="muted">Кері жору әдісі. Аңыз бойынша бұл фактіні б.з.д. V ғасырда пифагоршыл Гиппас ашқан.</p>
+  </div>
+  <div class="panel">
+    <ol class="proof">
+      <li><div>Керісінше жориық: <span class="m">√2 = p/q</span>, мұндағы p/q қысқартылмайтын бөлшек.</div></li>
+      <li><div>Екі жағын квадраттаймыз: <span class="m">2 = p²/q²</span>, яғни <span class="m">p² = 2q²</span>.</div></li>
+      <li><div>Демек p² жұп сан. Тақ санның квадраты тақ болатындықтан, p да жұп: <span class="m">p = 2k</span>.</div></li>
+      <li><div>Орнына қоямыз: <span class="m">4k² = 2q²</span>, яғни <span class="m">q² = 2k²</span>. Олай болса q да жұп.</div></li>
+      <li><div>p мен q екеуі де жұп, яғни бөлшек 2-ге қысқарады. Бұл «қысқартылмайтын» деген шартқа қайшы.</div></li>
+    </ol>
+    <p class="qed">Қорытынды: √2 рационал сан емес. <span class="gold">∎</span></p>
+    <p class="muted">Дәл осылай √3, √5, √7 және жалпы толық квадрат емес кез келген натурал санның түбірі иррационал екені дәлелденеді.</p>
+  </div>
+</section>
+
+<section class="sec" id="famous">
+  <div class="sec-head">
+    <span class="eyebrow">Танымал сандар</span>
+    <h2>Әйгілі иррационал сандар</h2>
+  </div>
+  <div class="cards">
+    <div class="card"><span class="big">√2</span><span class="name">Екінің түбірі</span><span class="dg">1,41421356237309504880168872420969…</span><p>Қабырғасы 1 шаршының диагоналы. Тарихта алғаш ашылған иррационал сан.</p></div>
+    <div class="card"><span class="big">√3</span><span class="name">Үштің түбірі</span><span class="dg">1,73205080756887729352744634150587…</span><p>Қабырғасы 2 болатын тең қабырғалы үшбұрыштың биіктігі.</p></div>
+    <div class="card"><span class="big">φ</span><span class="name">Алтын қима, (1 + √5)/2</span><span class="dg">1,61803398874989484820458683436563…</span><p>Фибоначчи сандарының қатынасы φ-ге жақындайды: 21/13, 34/21, 55/34…</p></div>
+    <div class="card"><span class="big">e</span><span class="name">Эйлер саны</span><span class="dg">2,71828182845904523536028747135266…</span><p>(1 + 1/n)ⁿ өрнегінің шегі, натурал логарифмнің негізі. Иррационалдығын Л. Эйлер дәлелдеген (1737).</p></div>
+    <div class="card"><span class="big">π</span><span class="name">Пи саны</span><span class="dg">3,14159265358979323846264338327950…</span><p>Шеңбер ұзындығының диаметріне қатынасы. Иррационалдығын И. Ламберт дәлелдеген (1761).</p></div>
+    <div class="card"><span class="big">C₁₀</span><span class="name">Чемперноун саны</span><span class="dg">0,12345678910111213141516171819…</span><p>Натурал сандарды қатар тізіп жазғанда шығады. Ешқашан периодқа түспейді.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="approx">
+  <div class="sec-head">
+    <span class="eyebrow">Зертхана</span>
+    <h2>Иррационал санды бөлшекпен жуықтау</h2>
+    <p class="muted">Иррационал санды дәл бөлшекпен жазу мүмкін емес, бірақ оған кез келген дәлдікпен жақындауға болады. Бөлімнің шегін өзгертіп, ең жақсы бөлшекті қара.</p>
+  </div>
+  <div class="panel">
+    <div class="chips" id="consts" role="group" aria-label="Санды таңда"></div>
+    <label class="ctl" for="qmax">Бөлім q ≤ <span id="vq">120</span><input id="qmax" type="range" min="1" max="1000" step="1" value="120"></label>
+    <div class="result" id="best" aria-live="polite"></div>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Тізбекті бөлшек жуықтауы</th><th>Ондық мәні</th><th>Қателік</th></tr></thead>
+        <tbody id="conv"></tbody>
+      </table>
+    </div>
+    <p class="muted">Бұл бөлшектер тізбекті (үздіксіз) бөлшектен алынады және өз бөлімі үшін ең дәл жуықтау болып табылады. Мысалы, 355/113 π-ді алғашқы 7 таңбаға дейін дәл береді.</p>
+  </div>
+</section>
+
+<section class="sec" id="rules">
+  <div class="sec-head">
+    <span class="eyebrow">Амалдар</span>
+    <h2>Иррационал сандармен амалдар</h2>
+  </div>
+  <div class="rules">
+    <div class="rule"><span class="f">рационал + иррационал = <span class="gold">иррационал</span></span><span class="e">2 + √3, 0,5 − π</span></div>
+    <div class="rule"><span class="f">рационал (≠ 0) · иррационал = <span class="gold">иррационал</span></span><span class="e">5√2, π/4</span></div>
+    <div class="rule"><span class="f">иррационал + иррационал = кез келген</span><span class="e">√2 + √3 ∈ 𝕀, бірақ √2 + (−√2) = 0</span></div>
+    <div class="rule"><span class="f">иррационал · иррационал = кез келген</span><span class="e">√2 · √3 = √6, бірақ √2 · √8 = 4</span></div>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <h3>Түбірмен жұмыс тәсілдері</h3>
+      <div class="ex">
+        <span>Көбейткішті шығару: √12 = √(4·3) = 2√3</span>
+        <span>Бөлімді иррационалдықтан босату: 1/√2 = √2/2</span>
+        <span>Салыстыру: 2√3 = √12, 3√2 = √18, демек 2√3 &lt; 3√2</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>√n ықшамдағыш</h3>
+      <label class="ctl" for="sq-n">n = <input id="sq-n" type="number" min="1" max="1000000" value="72"></label>
+      <div class="result" id="sq-out" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="quiz">
+  <div class="sec-head">
+    <span class="eyebrow">Өзіңді тексер</span>
+    <h2>Рационал ма, иррационал ма?</h2>
+  </div>
+  <div class="panel">
+    <div class="quiz" id="quiz-list"></div>
+    <div class="score"><span class="s" id="score">Дұрыс: 0 / 10</span><button class="btn" id="reset" type="button">Қайта бастау</button></div>
+  </div>
+</section>
+
+<footer>
+  <p>Есте сақта: <b>ℝ = ℚ ∪ 𝕀</b>. Рационал сан периодпен қайталанады, иррационал сан ешқашан қайталанбайды. Толық квадрат емес натурал санның түбірі әрқашан иррационал.</p>
+</footer>
+</div>
+
+<script>
+(function(){
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
+
+  /* hero digits */
+  const SQRT2 = '1,41421356237309504880168872420969807856967187537694807317667973799';
+  const hd = document.getElementById('hero-digits');
+  if (reduce) { hd.textContent = SQRT2 + '…'; }
+  else {
+    let n = hd.textContent.length;
+    const t = setInterval(() => { n++; hd.textContent = SQRT2.slice(0, n); if (n >= SQRT2.length) { hd.textContent += '…'; clearInterval(t); } }, 110);
+  }
+
+  /* hero number line */
+  const x0 = 30, u = 150, y = 60;
+  const ticks = document.getElementById('ticks');
+  for (let i = 0; i <= 4; i++) {
+    el('line', {x1:x0+i*u, y1:y-8, x2:x0+i*u, y2:y+8, stroke:'var(--ink)', 'stroke-width':1.5}, ticks);
+    el('text', {x:x0+i*u, y:y+26, 'text-anchor':'middle', 'font-size':13}, ticks, i);
+  }
+  const marks = [['√2',Math.SQRT2,-1],['φ',(1+Math.sqrt(5))/2,1],['√3',Math.sqrt(3),-1],['e',Math.E,1],['π',Math.PI,-1]];
+  const mg = document.getElementById('irr-marks');
+  marks.forEach(([s,v,dir]) => {
+    const x = x0 + v*u;
+    el('circle', {cx:x, cy:y, r:4.5, fill:'var(--gold)'}, mg);
+    el('line', {x1:x, y1:y, x2:x, y2:y+dir*20, stroke:'var(--gold)', 'stroke-width':1}, mg);
+    el('text', {x:x, y: dir<0 ? y-26 : y+44, 'text-anchor':'middle', class:'lbl-i'}, mg, s);
+  });
+
+  /* helpers */
+  function simplify(n){ let k = 1; for (let i = Math.floor(Math.sqrt(n)); i >= 2; i--) { if (n % (i*i) === 0) { k = i; break; } } return [k, n/(k*k)]; }
+  function rootStr(k, m){ if (m === 1) return String(k); return (k === 1 ? '' : k) + '√' + m; }
+  const verdict = (isR) => `<span class="verdict ${isR?'r':'i'}">${isR?'рационал':'иррационал'}</span>`;
+
+  /* geometry */
+  const geo = document.getElementById('geo');
+  const ga = document.getElementById('leg-a'), gb = document.getElementById('leg-b');
+  function drawGeo(){
+    const a = +ga.value, b = +gb.value, N = a*a + b*b, c = Math.sqrt(N);
+    document.getElementById('va').textContent = a; document.getElementById('vb').textContent = b;
+    const U = 80, ox = 30, oy = 350;
+    geo.innerHTML = '';
+    el('line', {x1:10, y1:oy, x2:530, y2:oy, stroke:'var(--ink)', 'stroke-width':1.5}, geo);
+    for (let i = 0; i <= 6; i++) { const x = ox+i*U; if (x > 525) break; el('line', {x1:x, y1:oy-6, x2:x, y2:oy+6, stroke:'var(--ink)', 'stroke-width':1.5}, geo); el('text', {x:x, y:oy+24, 'text-anchor':'middle', 'font-size':13}, geo, i); }
+    const ax = ox + a*U, by = oy - b*U, cx = ox + c*U;
+    // triangle
+    el('polygon', {points:`${ox},${oy} ${ax},${oy} ${ax},${by}`, fill:'var(--rat-soft)', stroke:'var(--rat)', 'stroke-width':2}, geo);
+    el('polyline', {points:`${ax-12},${oy} ${ax-12},${oy-12} ${ax},${oy-12}`, fill:'none', stroke:'var(--rat)', 'stroke-width':1.2}, geo);
+    // arc from hypotenuse end down to the line
+    const ang = Math.atan2(b, a);
+    const large = 0;
+    el('path', {d:`M ${ax} ${by} A ${c*U} ${c*U} 0 ${large} 1 ${cx} ${oy}`, fill:'none', stroke:'var(--gold)', 'stroke-width':1.6, 'stroke-dasharray':'6 5'}, geo);
+    el('line', {x1:ox, y1:oy, x2:ax, y2:by, stroke:'var(--gold)', 'stroke-width':2.5}, geo);
+    el('circle', {cx:cx, cy:oy, r:6, fill:'var(--gold)'}, geo);
+    el('circle', {cx:ox, cy:oy, r:3.5, fill:'var(--ink)'}, geo);
+    el('text', {x:(ox+ax)/2, y:oy+42, 'text-anchor':'middle', 'font-size':14, fill:'var(--rat)'}, geo, 'a = ' + a).setAttribute('style','fill:var(--rat)');
+    el('text', {x:ax+10, y:(oy+by)/2, 'font-size':14}, geo, 'b = ' + b).setAttribute('style','fill:var(--rat)');
+    const [k, m] = simplify(N);
+    const lab = el('text', {x:cx, y:oy-14, 'text-anchor': cx > 470 ? 'end' : 'middle', class:'lbl-i'}, geo, '√' + N);
+    if (cx > 470) lab.setAttribute('x', cx - 4);
+    const isR = m === 1;
+    const simp = (k > 1 || isR) ? ` = ${rootStr(k,m)}` : '';
+    document.getElementById('geo-out').innerHTML = `c = √(${a}² + ${b}²) = √${N}${simp} ≈ <span class="mono">${c.toFixed(6).replace('.',',')}</span>${verdict(isR)}`;
+  }
+  ga.addEventListener('input', drawGeo); gb.addEventListener('input', drawGeo); drawGeo();
+
+  /* approximations */
+  const C = [['√2',Math.SQRT2],['√3',Math.sqrt(3)],['φ',(1+Math.sqrt(5))/2],['e',Math.E],['π',Math.PI]];
+  let cur = 4;
+  const chips = document.getElementById('consts');
+  C.forEach(([s], i) => { const b = document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=s; b.setAttribute('aria-pressed', i===cur); b.addEventListener('click', () => { cur=i; [...chips.children].forEach((c,j)=>c.setAttribute('aria-pressed', j===cur)); approx(); }); chips.appendChild(b); });
+  const qs = document.getElementById('qmax');
+  const sup = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  function fmtErr(e){ if (e === 0) return '0'; const [mant, ex] = e.toExponential(2).split('e'); return mant.replace('.',',') + '·10' + String(+ex).split('').map(ch=>sup[ch]||'').join(''); }
+  function convergents(x, Q){
+    const out = []; let p0=1, q0=0, p1=Math.floor(x), q1=1, r=x-Math.floor(x);
+    out.push([p1,q1]);
+    for (let i=0; i<20 && r>1e-12; i++){ const y=1/r, a=Math.floor(y); r=y-a; const p2=a*p1+p0, q2=a*q1+q0; if (q2>Q) break; out.push([p2,q2]); p0=p1;q0=q1;p1=p2;q1=q2; }
+    return out;
+  }
+  function approx(){
+    const Q = +qs.value, [s, x] = C[cur];
+    document.getElementById('vq').textContent = Q;
+    let bp=0, bq=1, be=Infinity;
+    for (let q=1; q<=Q; q++){ const p=Math.round(x*q), e=Math.abs(x-p/q); if (e < be - 1e-15){ be=e; bp=p; bq=q; } }
+    document.getElementById('best').innerHTML = `${s} ≈ <span class="gold">${bp}/${bq}</span> <span class="muted mono" style="font-size:1rem">қателік ${fmtErr(be)}</span>`;
+    const tb = document.getElementById('conv'); tb.innerHTML='';
+    convergents(x, Q).forEach(([p,q]) => { const tr=document.createElement('tr'); tr.innerHTML=`<td class="num">${p}/${q}</td><td class="num">${(p/q).toFixed(9).replace('.',',')}</td><td class="num">${fmtErr(Math.abs(x-p/q))}</td>`; tb.appendChild(tr); });
+  }
+  qs.addEventListener('input', approx); approx();
+
+  /* sqrt simplifier */
+  const sn = document.getElementById('sq-n');
+  function sq(){
+    const n = Math.floor(+sn.value);
+    const out = document.getElementById('sq-out');
+    if (!(n >= 1) || n > 1000000){ out.innerHTML = '<span class="muted" style="font-size:1rem">1-ден 1 000 000-ға дейінгі натурал сан енгіз.</span>'; return; }
+    const [k, m] = simplify(n);
+    let s = '√' + n;
+    if (k > 1 && m > 1) s += ` = √(${k*k}·${m}) = ${rootStr(k,m)}`;
+    else if (m === 1) s += ` = ${k}`;
+    out.innerHTML = s + verdict(m === 1);
+  }
+  sn.addEventListener('input', sq); sq();
+
+  /* quiz */
+  const Qz = [
+    ['√16', true, '√16 = 4, бүтін сан.'],
+    ['√7', false, '7 толық квадрат емес.'],
+    ['0,(3)', true, 'Периодты бөлшек: 0,(3) = 1/3.'],
+    ['π', false, 'Ламберт дәлелдеген иррационал сан.'],
+    ['22/7', true, 'Бұл π-дің жуық мәні ғана, өзі кәдімгі бөлшек.'],
+    ['√2 · √8', true, '√2 · √8 = √16 = 4.'],
+    ['0,1010010001…', false, 'Нөлдер саны өсе береді, период жоқ.'],
+    ['√(9/4)', true, '√(9/4) = 3/2.'],
+    ['1 + √3', false, 'Рационал + иррационал = иррационал.'],
+    ['√50 − 5√2', true, '√50 = 5√2, сондықтан айырма 0-ге тең.']
+  ];
+  const list = document.getElementById('quiz-list');
+  let correct = 0;
+  function renderQuiz(){
+    list.innerHTML=''; correct=0; document.getElementById('score').textContent = 'Дұрыс: 0 / ' + Qz.length;
+    Qz.forEach(([x, isR, why], i) => {
+      const row = document.createElement('div'); row.className='qi';
+      row.innerHTML = `<span class="x">${x}</span><div class="btns"><button type="button" id="q${i}r">Рационал</button><button type="button" id="q${i}i">Иррационал</button></div>`;
+      const w = document.createElement('div'); w.className='why'; w.hidden = true; w.textContent = why; row.appendChild(w);
+      const [br, bi] = row.querySelectorAll('button');
+      const pick = (ans, btn) => {
+        const ok = ans === isR; if (ok) correct++;
+        btn.classList.add(ok ? 'picked-ok' : 'picked-bad');
+        br.disabled = bi.disabled = true;
+        w.hidden = false; w.textContent = (ok ? 'Дұрыс. ' : 'Қате. ') + why;
+        document.getElementById('score').textContent = `Дұрыс: ${correct} / ${Qz.length}`;
+      };
+      br.addEventListener('click', () => pick(true, br)); bi.addEventListener('click', () => pick(false, bi));
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('reset').addEventListener('click', renderQuiz);
+  renderQuiz();
+})();
+</script>
+
+</body>
+</html>
